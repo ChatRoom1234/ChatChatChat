@@ -32,12 +32,14 @@ window.onload = function () {
                 } else {
                     alert('Ok! Access key: ' + data.message);
                     // setting access_key which exists in db into cookie
-                    var date = new Date(new Date().getTime() + 60 * 1000);
+                    var date = new Date(new Date().getTime() + 60 * 1000 * 60 * 24 *365);
                     document.cookie = "access_key=" + data.message + "; path=/; expires=" + date.toUTCString();
+                    console.log(document.cookie);
                     document.getElementById("log").style.display="block";
                     document.getElementById("form").style.display="block";
                     document.getElementById("reg").style.display="none";
                     document.getElementById("auc").style.display="none";
+                    ws();
                     // setting cookie ends
                 }
                 // console.log(json.email + ", " + json.password);
@@ -47,10 +49,15 @@ window.onload = function () {
     }
     document.getElementById("log").style.display="none";
     document.getElementById("form").style.display="none";
-    //document.getElementById("form").style.display="none";
-    //document.getElementById("authBtn").onclick = authExample;
-
-
+    //document.getElementById("form").style.display="none";			
+    if(get_cookie("access_key")) {
+    	              document.getElementById("log").style.display="block";
+                    document.getElementById("form").style.display="block";
+                    document.getElementById("reg").style.display="none";
+                    document.getElementById("auc").style.display="none";
+                    ws();
+    }
+    //document.getElementById("out").onclick = delete_cookie("access_key");
     function appendLog(item) {
         var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
         log.appendChild(item);
@@ -81,7 +88,12 @@ window.onload = function () {
         msg.value = "";
         return false;
     };
-
+    document.getElementById("out").onsubmit = function () {
+    	delete_cookie("access_key");
+    	location.reload();
+    	return false;
+    };
+    function ws() {
     if (window["WebSocket"]) {
         conn = new WebSocket("ws://" + document.location.host + "/ws");
         conn.onclose = function (evt) {
@@ -102,6 +114,27 @@ window.onload = function () {
         item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
         appendLog(item);
     }
+  }
+
+  function get_cookie ( cookie_name )
+	{
+  var results = document.cookie.match ( '(^|;) ?' + cookie_name + '=([^;]*)(;|$)' );
+ 
+  if ( results )
+    return ( unescape ( results[2] ) );
+  else
+    return null;
+	}
+
+	function delete_cookie ( cookie_name )
+	{
+  	var cookie_date = new Date ( );  // Текущая дата и время
+  	cookie_date.setTime ( cookie_date.getTime() - 1 );
+  	document.cookie = cookie_name += "=; expires=" + cookie_date.toGMTString();
+  	location.reload();
+	}
+
+	console.log(get_cookie("access_key"));
 };
 </script>
 <style type="text/css">
@@ -136,7 +169,17 @@ body {
     position: absolute;
     bottom: 1em;
     left: 0px;
-    width: 100%;
+    width: 90%;
+    overflow: hidden;
+}
+
+#out {
+    padding: 0 0.5em 0 0.5em;
+    margin: 0;
+    position: absolute;
+    bottom: 1em;
+    left: 95%;
+    width: 5%;
     overflow: hidden;
 }
 
@@ -214,6 +257,10 @@ body {
     <button id="authBtn">Войти</button>
 </form>
 </div>
+
+<form id="out">
+	<button id="outlog">Выйти</button>
+</form>
 
 
 </body>
