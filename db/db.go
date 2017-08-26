@@ -53,24 +53,25 @@ func CreateKey(userID int) string {
 }
 
 // GetUserByKey returns user login by key or "" if no user with the key exists
-func GetUserByKey(key string) string {
+func GetUserByKey(key string) (int, string) {
 	db := getDbConn()
-	rows, err := db.Query("SELECT login FROM access_keys JOIN users ON user_id=id WHERE key=$1 LIMIT 1;", key)
+	rows, err := db.Query("SELECT user_id, login FROM access_keys JOIN users ON user_id=id WHERE key=$1 LIMIT 1;", key)
 	if err != nil {
 		logErr(err)
-		return ""
+		return 0, ""
 	}
 
+	var userID int
+	var username string
 	for rows.Next() {
-		var username string
-		err = rows.Scan(&username)
+		err = rows.Scan(&userID, &username)
 		if err != nil {
 			logErr(err)
-			return ""
+			return 0, ""
 		}
-		return username
+		return userID, username
 	}
-	return ""
+	return 0, ""
 }
 
 // CreateUser adds user to database
@@ -134,21 +135,22 @@ func ValidateUser(login string, password string) int {
 func GetHistory() ([100]string, error) {
 	var result [100]string
 	db := getDbConn()
-	rows, err := db.Query("SELECT message FROM history ORDER BY id LIMIT 100;")
+	rows, err := db.Query("SELECT login, message FROM history inner join users on users.id = user_id ORDER BY history.id LIMIT 100;")
 	if err != nil {
 		logErr(err)
 		return result, errors.New("DB error")
 	}
 
 	i := 0
+	var username string
 	var message string
 	for rows.Next() {
-		err = rows.Scan(&message)
+		err = rows.Scan(&username, &message)
 		if err != nil {
 			logErr(err)
 			return result, errors.New("Backend error")
 		}
-		result[i] = message
+		result[i] = username + ": " + message
 		i++
 	}
 
@@ -156,9 +158,9 @@ func GetHistory() ([100]string, error) {
 }
 
 // AddMessage stores message into DB
-func AddMessage(message string) error {
+func AddMessage(userID int, message []byte) error {
 	db := getDbConn()
-	db.QueryRow("INSERT INTO history(message) VALUES($1);", message)
+	db.QueryRow("INSERT INTO history(user_id, message) VALUES($1, $2);", userID, message)
 
 	return nil
 }

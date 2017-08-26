@@ -51,7 +51,7 @@ type Client struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump(username []byte) {
+func (c *Client) readPump(accessKey string) {
 	defer func() {
 		c.room.unregister <- c
 		c.conn.Close()
@@ -67,9 +67,15 @@ func (c *Client) readPump(username []byte) {
 			}
 			break
 		}
+		userID, username := db.GetUserByKey(accessKey)
+		// username = []byte(username)
+		if userID == 0 {
+			return
+		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		message = append(username, message...)
-		db.AddMessage(string(message))
+		db.AddMessage(userID, message)
+
+		message = append([]byte(username+": "), message...)
 		c.room.broadcast <- message
 	}
 }
@@ -140,7 +146,10 @@ func ServeWs(room *Room, w http.ResponseWriter, r *http.Request) {
 
 	go client.writePump()
 	go func(accessKey string) {
-		username := db.GetUserByKey(accessKey)
-		client.readPump(append([]byte(username), usernameSeparator...))
+		client.readPump(accessKey)
 	}(accessKey.Value)
+	// go func(accessKey string) {
+	// 	username := db.GetUserByKey(accessKey)
+	// 	client.readPump(append([]byte(username), usernameSeparator...))
+	// }(accessKey.Value)
 }

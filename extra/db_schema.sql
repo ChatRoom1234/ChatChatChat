@@ -4,13 +4,6 @@ CREATE TABLE users (
     password text NOT NULL
 );
 
-CREATE TABLE rooms (
-    id serial PRIMARY KEY,
-    title text NOT NULL,
-    url text NOT NULL
-);
-CREATE INDEX index_room_urls ON rooms (url);
-
 CREATE TABLE access_keys (
     user_id integer REFERENCES users ON DELETE CASCADE,
     key text NOT NULL,
@@ -20,5 +13,6 @@ CREATE INDEX index_access_keys ON access_keys (key);
 
 CREATE TABLE history (
     id serial PRIMARY KEY,
+    user_id integer REFERENCES users ON DELETE CASCADE,
     message text NOT NULL
 );
