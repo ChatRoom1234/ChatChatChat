@@ -14,9 +14,45 @@
 			var password1 = document.getElementById("password1");
 			var password2 = document.getElementById("password2");
 
-			function regExample() {
+
+			function getHistory() {
 				var xhr = new XMLHttpRequest();
-				var url = "/reg";
+				var url = "/history";
+				xhr.open("GET", url, true);
+				xhr.send();
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState != 4) return;
+					if (xhr.status != 200) {
+      	// обработать ошибку
+      	alert( xhr.status + ': ' + xhr.statusText );
+      } else {
+      	try {
+      		var history = JSON.parse(xhr.responseText);
+      	} catch (e) {
+      		alert( "Некорректный ответ " + e.message );
+      	}
+      	showHistory(history.messages);
+      }
+    }
+  	};
+
+  	function showHistory(messages) {
+  		
+  		for(var i=0; i<messages.length; i++) {
+  			   	var item = document.createElement("div");
+    				item.innerText = messages[i];
+    				appendLog(item);
+    				// appendLog(messages[i]);
+  		}
+  }
+
+
+
+
+
+function regExample() {
+	var xhr = new XMLHttpRequest();
+	var url = "/reg";
         // valid
         var person = {
         	login: arguments[0],
@@ -32,9 +68,10 @@
         	if (xhr.readyState === 4 && xhr.status === 200) {
         		var data = JSON.parse(xhr.responseText);
         		if (data.type == 'error') {
-        			alert('Error!\n' + data.message);
+        			document.getElementById("err2").innerHTML = "Error " + data.message;
         		} else {
-        			alert('Ok! Access key: ' + data.message);
+
+        			document.getElementById("err1").innerHTML = "Вы зарегестрированы, подождите";
                     // setting access_key which exists in db into cookie
                     var date = new Date(new Date().getTime() + 60 * 1000 * 60 * 24 *365);
                     document.cookie = "access_key=" + data.message + "; path=/; expires=" + date.toUTCString();
@@ -50,11 +87,11 @@
               }
             };
             xhr.send(dataToSend);
-			}
+          }
 
-			function authExample() {
-				var xhr = new XMLHttpRequest();
-				var url = "/auth";
+          function authExample() {
+          	var xhr = new XMLHttpRequest();
+          	var url = "/auth";
         // valid
         var person = {
         	login: arguments[0],
@@ -70,10 +107,10 @@
         	if (xhr.readyState === 4 && xhr.status === 200) {
         		var data = JSON.parse(xhr.responseText);
         		if (data.type == 'error') {
-        			alert('Error!\n' + data.message);
+        			document.getElementById("err2").innerHTML = "Error " + data.message;
         		} else {
-        			alert('Ok! Access key: ' + data.message);
                     // setting access_key which exists in db into cookie
+                    document.getElementById("err2").innerHTML = "Подождите...";
                     var date = new Date(new Date().getTime() + 60 * 1000 * 60 * 24 *365);
                     document.cookie = "access_key=" + data.message + "; path=/; expires=" + date.toUTCString();
                     document.getElementById("log").style.display="block";
@@ -129,6 +166,16 @@
     	if(!password1.value) {
     		return false;
     	}
+    	if(password1.value != password2.value) {
+    		console.log(password1);
+    		console.log(password2);
+    		document.getElementById("err1").innerHTML = "Passwords do not match";
+    		return false;
+    	}
+    	if(password1.value.length < 6) {
+    		document.getElementById("err1").innerHTML = "Password is too short";
+    		return false;
+    	}
     	regExample(login1.value, password1.value);
     	return false;
     };
@@ -150,6 +197,7 @@
     	return false;
     };
     function ws() {
+    	getHistory();
     	if (window["WebSocket"]) {
     		conn = new WebSocket("ws://" + document.location.host + "/ws");
     		conn.onclose = function (evt) {
@@ -189,7 +237,19 @@
   	document.cookie = cookie_name += "=; expires=" + cookie_date.toGMTString();
   	location.reload();
   }
+  /*
+  function TestLogin1(login){
 
+  	if(/^[a-zA-Z1-9]+$/.test(login) === false)
+  		{alert('В логине должны быть только латинские буквы'); return false;}
+  	if(login.length < 4 || login.length > 20)
+  		{ alert('В логине должен быть от 4 до 20 символов'); return false;}
+  	if(parseInt(login.substr(0, 1)))
+  		{alert('Логине должен начинаться с буквы'); return false;}
+
+  	return true;
+  }
+  */
   console.log(get_cookie("access_key"));
 };
 </script>
@@ -265,6 +325,14 @@
 		border: 3px solid black;
 
 	}
+	#err1{
+		font-size: 25px;
+		color: red;
+	}
+	#err2{
+		fonr-size: 25px;
+		color: red;
+	}
 
 </style>
 </head>
@@ -276,7 +344,8 @@
 	</form>
 
 	<div id="reg">
-		<h1>Регистрация</h1> 
+		<h1>Регистрация</h1>
+		<h2 id="err1"></h2> 
 		<form id="formreg">
 
 			<label><font color='red'>*</font> Ваш Логин:<br></label>
@@ -289,16 +358,17 @@
 
 
 			<label><font color='red'>*</font> Подтвердите пароль:<br></label>
-			<input name="password2" type="password" size="50" id="password2"> <span></span><br><br>
+			<input name`="password2" type="password" size="50" id="password2"> <span></span><br><br>
 
 
-					<button id="inlog">Регистрация</button>
+			<button id="inlog">Регистрация</button>
 			<font color='red'>*</font> поля, обязательные для заполнения.
 
 		</form> 
 	</div>
 	<div id="auc">
 		<h1>Авторизация</h1>
+		<h2 id="err2"></h2>
 		<form id="avto">
 
 			<label><font color='red'>*</font> Ваш Логин:<br></label>
