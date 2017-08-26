@@ -19,6 +19,12 @@ type responseJSON struct {
 	Message string `json:"message"`
 }
 
+type responseArrayJSON struct {
+	Type     string      `json:"type"`
+	Messages [100]string `json:"messages,omitempty"`
+	Message  string      `json:"message",omitempty`
+}
+
 func handlerDefault(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
@@ -81,6 +87,20 @@ func handlerReg(w http.ResponseWriter, req *http.Request) {
 	} else {
 		accessKey := db.CreateKey(userID)
 		response = &responseJSON{Type: "access_key", Message: accessKey}
+	}
+
+	resp, _ := json.Marshal(response)
+	w.Write(resp)
+}
+
+func handlerHistory(w http.ResponseWriter, req *http.Request) {
+	messages, err := db.GetHistory()
+
+	var response *responseArrayJSON
+	if err != nil {
+		response = &responseArrayJSON{Type: "error", Message: err.Error()}
+	} else {
+		response = &responseArrayJSON{Type: "messages", Messages: messages}
 	}
 
 	resp, _ := json.Marshal(response)

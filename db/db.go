@@ -22,10 +22,8 @@ type conf struct {
 	Password string `yaml:"password"`
 }
 
-func checkErr(err error) {
-	if err != nil {
-		log.Printf("Error %v ", err)
-	}
+func logErr(err error) {
+	log.Printf("Error %v ", err)
 }
 
 func getConf() conf {
@@ -58,15 +56,20 @@ func CreateKey(userID int) string {
 func GetUserByKey(key string) string {
 	db := getDbConn()
 	rows, err := db.Query("SELECT login FROM access_keys JOIN users ON user_id=id WHERE key=$1 LIMIT 1;", key)
-	checkErr(err)
+	if err != nil {
+		logErr(err)
+		return ""
+	}
 
 	for rows.Next() {
 		var username string
 		err = rows.Scan(&username)
-		checkErr(err)
+		if err != nil {
+			logErr(err)
+			return ""
+		}
 		return username
 	}
-
 	return ""
 }
 
@@ -74,11 +77,17 @@ func GetUserByKey(key string) string {
 func CreateUser(login string, password string) (int, error) {
 	db := getDbConn()
 	rows, err := db.Query("SELECT COUNT(*) FROM users WHERE login=$1 LIMIT 1;", login)
-	checkErr(err)
+	if err != nil {
+		logErr(err)
+		return 0, errors.New("DB error")
+	}
 	for rows.Next() {
 		var userCount int
 		err = rows.Scan(&userCount)
-		checkErr(err)
+		if err != nil {
+			logErr(err)
+			return 0, errors.New("Backend error")
+		}
 		if userCount != 0 {
 			return 0, errors.New("user already exists")
 		}
@@ -88,7 +97,10 @@ func CreateUser(login string, password string) (int, error) {
 
 	var lastInserted int
 	err = db.QueryRow("INSERT INTO users(login,password) VALUES($1,$2) returning id;", login, hash).Scan(&lastInserted)
-	checkErr(err)
+	if err != nil {
+		logErr(err)
+		return 0, errors.New("DB error")
+	}
 
 	return lastInserted, nil
 }
@@ -97,19 +109,58 @@ func CreateUser(login string, password string) (int, error) {
 func ValidateUser(login string, password string) int {
 	db := getDbConn()
 	rows, err := db.Query("SELECT id, password FROM users WHERE login=$1 LIMIT 1;", login)
-	checkErr(err)
+	if err != nil {
+		logErr(err)
+		return 0
+	}
 
 	for rows.Next() {
 		var userID int
 		var dbHash string
 		err = rows.Scan(&userID, &dbHash)
-		checkErr(err)
+		if err != nil {
+			logErr(err)
+			return 0
+		}
 		if checkPasswordHash(password, dbHash) {
 			return userID
 		}
 	}
 
 	return 0
+}
+
+// GetHistory returns message history
+func GetHistory() ([100]string, error) {
+	var result [100]string
+	db := getDbConn()
+	rows, err := db.Query("SELECT message FROM history ORDER BY id LIMIT 100;")
+	if err != nil {
+		logErr(err)
+		return result, errors.New("DB error")
+	}
+
+	i := 0
+	var message string
+	for rows.Next() {
+		err = rows.Scan(&message)
+		if err != nil {
+			logErr(err)
+			return result, errors.New("Backend error")
+		}
+		result[i] = message
+		i++
+	}
+
+	return result, nil
+}
+
+// AddMessage stores message into DB
+func AddMessage(message string) error {
+	db := getDbConn()
+	db.QueryRow("INSERT INTO history(message) VALUES($1);", message)
+
+	return nil
 }
 
 func initDb() error {

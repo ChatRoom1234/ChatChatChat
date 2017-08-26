@@ -68,7 +68,9 @@ func (c *Client) readPump(username []byte) {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.room.broadcast <- append(username, message...)
+		message = append(username, message...)
+		db.AddMessage(string(message))
+		c.room.broadcast <- message
 	}
 }
 

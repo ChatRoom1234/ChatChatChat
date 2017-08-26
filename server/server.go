@@ -21,6 +21,8 @@ func urlSolver(room *chatroom.Room, w http.ResponseWriter, req *http.Request) {
 		handlerReg(w, req)
 	case "/auth":
 		handlerAuth(w, req)
+	case "/history":
+		handlerHistory(w, req)
 	case "/ws":
 		chatroom.ServeWs(room, w, req)
 	default:

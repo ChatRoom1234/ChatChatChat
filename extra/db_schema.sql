@@ -17,3 +17,8 @@ CREATE TABLE access_keys (
     date_start date not null default CURRENT_DATE
 );
 CREATE INDEX index_access_keys ON access_keys (key);
+
+CREATE TABLE history (
+    id serial PRIMARY KEY,
+    message text NOT NULL
+);
