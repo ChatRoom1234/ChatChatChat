@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Chat Example</title>
-<script type="text/javascript">
-window.onload = function () {
-    var conn;
-    var msg = document.getElementById("msg");
-    var log = document.getElementById("log");
-    var login = document.getElementById("login");
-    var password = document.getElementById("password");
+	<title>Chat Example</title>
+	<script type="text/javascript">
+		window.onload = function () {
+			var conn;
+			var msg = document.getElementById("msg");
+			var log = document.getElementById("log");
+			var login = document.getElementById("login");
 
-    function authExample() {
-        var xhr = new XMLHttpRequest();
-        var url = "/auth";
+			var password = document.getElementById("password");
+			var login1 = document.getElementById("login1");
+			var password1 = document.getElementById("password1");
+			var password2 = document.getElementById("password2");
+
+			function regExample() {
+				var xhr = new XMLHttpRequest();
+				var url = "/reg";
         // valid
         var person = {
-            login: arguments[0],
-            password: arguments[1]
+        	login: arguments[0],
+        	password: arguments[1]
         };
         var dataToSend = JSON.stringify(person);
         //{"login": "vasilesk", "password": "12345678"}
@@ -25,68 +29,120 @@ window.onload = function () {
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-type", "application/json");
         xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-                if (data.type == 'error') {
-                    alert('Error!\n' + data.message);
-                } else {
-                    alert('Ok! Access key: ' + data.message);
+        	if (xhr.readyState === 4 && xhr.status === 200) {
+        		var data = JSON.parse(xhr.responseText);
+        		if (data.type == 'error') {
+        			alert('Error!\n' + data.message);
+        		} else {
+        			alert('Ok! Access key: ' + data.message);
                     // setting access_key which exists in db into cookie
                     var date = new Date(new Date().getTime() + 60 * 1000 * 60 * 24 *365);
                     document.cookie = "access_key=" + data.message + "; path=/; expires=" + date.toUTCString();
-                    console.log(document.cookie);
                     document.getElementById("log").style.display="block";
                     document.getElementById("form").style.display="block";
+                    document.getElementById("out").style.display="block";
                     document.getElementById("reg").style.display="none";
                     document.getElementById("auc").style.display="none";
                     ws();
                     // setting cookie ends
-                }
+                  }
                 // console.log(json.email + ", " + json.password);
-            }
+              }
+            };
+            xhr.send(dataToSend);
+			}
+
+			function authExample() {
+				var xhr = new XMLHttpRequest();
+				var url = "/auth";
+        // valid
+        var person = {
+        	login: arguments[0],
+        	password: arguments[1]
         };
-        xhr.send(dataToSend);
-    }
-    document.getElementById("log").style.display="none";
-    document.getElementById("form").style.display="none";
-    //document.getElementById("form").style.display="none";			
-    if(get_cookie("access_key")) {
-    	              document.getElementById("log").style.display="block";
+        var dataToSend = JSON.stringify(person);
+        //{"login": "vasilesk", "password": "12345678"}
+        // invalid
+        //var dataToSend = JSON.stringify({"login": "hey@mail.com", "password": "101010"});
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.onreadystatechange = function () {
+        	if (xhr.readyState === 4 && xhr.status === 200) {
+        		var data = JSON.parse(xhr.responseText);
+        		if (data.type == 'error') {
+        			alert('Error!\n' + data.message);
+        		} else {
+        			alert('Ok! Access key: ' + data.message);
+                    // setting access_key which exists in db into cookie
+                    var date = new Date(new Date().getTime() + 60 * 1000 * 60 * 24 *365);
+                    document.cookie = "access_key=" + data.message + "; path=/; expires=" + date.toUTCString();
+                    document.getElementById("log").style.display="block";
                     document.getElementById("form").style.display="block";
+                    document.getElementById("out").style.display="block";
                     document.getElementById("reg").style.display="none";
                     document.getElementById("auc").style.display="none";
                     ws();
+                    // setting cookie ends
+                  }
+                // console.log(json.email + ", " + json.password);
+              }
+            };
+            xhr.send(dataToSend);
+          }
+          document.getElementById("log").style.display="none";
+          document.getElementById("form").style.display="none";
+          document.getElementById("out").style.display="none";
+    //document.getElementById("form").style.display="none";			
+    if(get_cookie("access_key")) {
+    	document.getElementById("log").style.display="block";
+    	document.getElementById("form").style.display="block";
+    	document.getElementById("out").style.display="block"; 	
+    	document.getElementById("reg").style.display="none";
+    	document.getElementById("auc").style.display="none";
+    	ws();
     }
     //document.getElementById("out").onclick = delete_cookie("access_key");
     function appendLog(item) {
-        var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
-        log.appendChild(item);
-        if (doScroll) {
-            log.scrollTop = log.scrollHeight - log.clientHeight;
-        }
+    	var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
+    	log.appendChild(item);
+    	if (doScroll) {
+    		log.scrollTop = log.scrollHeight - log.clientHeight;
+    	}
     }
 
     document.getElementById("avto").onsubmit = function () {
-        if(!login.value) {
-            return false;
-        }
-        if(!password.value) {
-            return false;
-        }
-        authExample(login.value, password.value);
-        return false;
+    	if(!login.value) {
+    		return false;
+    	}
+    	if(!password.value) {
+    		return false;
+    	}
+    	authExample(login.value, password.value);
+    	return false;
+    };
+
+
+    document.getElementById("formreg").onsubmit = function () {
+    	if(!login1.value) {
+    		return false;
+    	}
+    	if(!password1.value) {
+    		return false;
+    	}
+    	regExample(login1.value, password1.value);
+    	return false;
     };
 
     document.getElementById("form").onsubmit = function () {
-        if (!conn) {
-            return false;
-        }
-        if (!msg.value) {
-            return false;
-        }
-        conn.send(msg.value);
-        msg.value = "";
-        return false;
+    	if (!conn) {
+    		return false;
+    	}
+    	if (!msg.value) {
+    		return false;
+    	}
+    	conn.send(msg.value);
+    	msg.value = "";
+    	return false;
     };
     document.getElementById("out").onsubmit = function () {
     	delete_cookie("access_key");
@@ -94,173 +150,172 @@ window.onload = function () {
     	return false;
     };
     function ws() {
-    if (window["WebSocket"]) {
-        conn = new WebSocket("ws://" + document.location.host + "/ws");
-        conn.onclose = function (evt) {
-            var item = document.createElement("div");
-            item.innerHTML = "<b>Connection closed.</b>";
-            appendLog(item);
-        };
-        conn.onmessage = function (evt) {
-            var messages = evt.data.split('\n');
-            for (var i = 0; i < messages.length; i++) {
-                var item = document.createElement("div");
-                item.innerText = messages[i];
-                appendLog(item);
-            }
-        };
-    } else {
-        var item = document.createElement("div");
-        item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
-        appendLog(item);
+    	if (window["WebSocket"]) {
+    		conn = new WebSocket("ws://" + document.location.host + "/ws");
+    		conn.onclose = function (evt) {
+    			var item = document.createElement("div");
+    			item.innerHTML = "<b>Connection closed.</b>";
+    			appendLog(item);
+    		};
+    		conn.onmessage = function (evt) {
+    			var messages = evt.data.split('\n');
+    			for (var i = 0; i < messages.length; i++) {
+    				var item = document.createElement("div");
+    				item.innerText = messages[i];
+    				appendLog(item);
+    			}
+    		};
+    	} else {
+    		var item = document.createElement("div");
+    		item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+    		appendLog(item);
+    	}
     }
-  }
 
-  function get_cookie ( cookie_name )
-	{
-  var results = document.cookie.match ( '(^|;) ?' + cookie_name + '=([^;]*)(;|$)' );
- 
-  if ( results )
-    return ( unescape ( results[2] ) );
-  else
-    return null;
-	}
+    function get_cookie ( cookie_name )
+    {
+    	var results = document.cookie.match ( '(^|;) ?' + cookie_name + '=([^;]*)(;|$)' );
 
-	function delete_cookie ( cookie_name )
-	{
+    	if ( results )
+    		return ( unescape ( results[2] ) );
+    	else
+    		return null;
+    }
+
+    function delete_cookie ( cookie_name )
+    {
   	var cookie_date = new Date ( );  // Текущая дата и время
   	cookie_date.setTime ( cookie_date.getTime() - 1 );
   	document.cookie = cookie_name += "=; expires=" + cookie_date.toGMTString();
   	location.reload();
-	}
+  }
 
-	console.log(get_cookie("access_key"));
+  console.log(get_cookie("access_key"));
 };
 </script>
 <style type="text/css">
-html {
-    overflow: hidden;
-}
+	html {
+		overflow: hidden;
+	}
 
-body {
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    background: gray;
-}
+	body {
+		overflow: hidden;
+		padding: 0;
+		margin: 0;
+		width: 100%;
+		height: 100%;
+		background: gray;
+	}
 
-#log {
-    background: white;
-    margin: 0;
-    padding: 0.5em 0.5em 0.5em 0.5em;
-    position: absolute;
-    top: 0.5em;
-    left: 0.5em;
-    right: 0.5em;
-    bottom: 3em;
-    overflow: auto;
-}
+	#log {
+		background: white;
+		margin: 0;
+		padding: 0.5em 0.5em 0.5em 0.5em;
+		position: absolute;
+		top: 0.5em;
+		left: 0.5em;
+		right: 0.5em;
+		bottom: 3em;
+		overflow: auto;
+	}
 
-#form {
-    padding: 0 0.5em 0 0.5em;
-    margin: 0;
-    position: absolute;
-    bottom: 1em;
-    left: 0px;
-    width: 90%;
-    overflow: hidden;
-}
+	#form {
+		padding: 0 0.5em 0 0.5em;
+		margin: 0;
+		position: absolute;
+		bottom: 1em;
+		left: 0px;
+		width: 90%;
+		overflow: hidden;
+	}
 
-#out {
-    padding: 0 0.5em 0 0.5em;
-    margin: 0;
-    position: absolute;
-    bottom: 1em;
-    left: 95%;
-    width: 5%;
-    overflow: hidden;
-}
+	#out {
+		padding: 0 0.5em 0 0.5em;
+		margin: 0;
+		position: absolute;
+		bottom: 1em;
+		left: 95%;
+		width: 5%;
+		overflow: hidden;
+	}
 
-#reg {
-    position: fixed;
-    top: 50%;
-    left: 35%;
-    margin-top: -150px;
-    margin-left: -180px;
-    width: 360px;
-    height: 320px;
-    background-color: lightgray;
-    padding: 10px;
-    border: 3px solid black;
-}
+	#reg {
+		position: fixed;
+		top: 50%;
+		left: 35%;
+		margin-top: -150px;
+		margin-left: -180px;
+		width: 360px;
+		height: 320px;
+		background-color: lightgray;
+		padding: 10px;
+		border: 3px solid black;
+	}
 
-#auc {
-    position: fixed;
-    top: 50%;
-    left: 65%;
-    margin-top: -149px;
-    margin-left: -180px;
-    width: 360px;
-    height: 320px;
-    padding: 10px;
-    background-color: lightgray;
-    border: 3px solid black;
+	#auc {
+		position: fixed;
+		top: 50%;
+		left: 65%;
+		margin-top: -149px;
+		margin-left: -180px;
+		width: 360px;
+		height: 320px;
+		padding: 10px;
+		background-color: lightgray;
+		border: 3px solid black;
 
-}
+	}
 
 </style>
 </head>
 <body>
-<div id="log"></div>
-<form id="form">
-    <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64"/>
-</form>
+	<div id="log"></div>
+	<form id="form">
+		<input type="submit" value="Send" />
+		<input type="text" id="msg" size="64"/>
+	</form>
 
-<div id="reg">
-<h1>Регистрация</h1> 
-<form>
- 
-    <label><font color='red'>*</font> Ваш Логин:<br></label>
-    <input name="login" type="text" size="50" id="login1"> <span></span><br>
+	<div id="reg">
+		<h1>Регистрация</h1> 
+		<form id="formreg">
 
- 
-    <label><font color='red'>*</font> Ваш пароль:<br></label>
-    <input name="password" type="password" size="50" id="password1"> <span></span><br>
- <small>Не менее 6 символов</small>
- 
- 
-    <label><font color='red'>*</font> Подтвердите пароль:<br></label>
-    <input name="password2" type="password" size="50" id="password2"> <span></span><br><br>
- 
- 
- 
-<input type="submit" name="submit" value="Зарегистрироваться" id="submit" disabled><br><br>
-<font color='red'>*</font> поля, обязательные для заполнения.
- 
-</form> 
-</div>
-<div id="auc">
-<h1>Авторизация</h1>
-<form id="avto">
-
-    <label><font color='red'>*</font> Ваш Логин:<br></label>
-    <input name="login" type="text" size="50" id="login"> <span></span><br>
+			<label><font color='red'>*</font> Ваш Логин:<br></label>
+			<input name="login1" type="text" size="50" id="login1"> <span></span><br>
 
 
+			<label><font color='red'>*</font> Ваш пароль:<br></label>
+			<input name="password1" type="password" size="50" id="password1"> <span></span><br>
+			<small>Не менее 6 символов</small>
 
-    <label><font color='red'>*</font> Ваш пароль:<br></label>
-    <input name="password" type="password" size="50" id="password"> <span></span><br>
 
-    <button id="authBtn">Войти</button>
-</form>
-</div>
+			<label><font color='red'>*</font> Подтвердите пароль:<br></label>
+			<input name="password2" type="password" size="50" id="password2"> <span></span><br><br>
 
-<form id="out">
-	<button id="outlog">Выйти</button>
-</form>
+
+					<button id="inlog">Регистрация</button>
+			<font color='red'>*</font> поля, обязательные для заполнения.
+
+		</form> 
+	</div>
+	<div id="auc">
+		<h1>Авторизация</h1>
+		<form id="avto">
+
+			<label><font color='red'>*</font> Ваш Логин:<br></label>
+			<input name="login" type="text" size="50" id="login"> <span></span><br>
+
+
+
+			<label><font color='red'>*</font> Ваш пароль:<br></label>
+			<input name="password" type="password" size="50" id="password"> <span></span><br>
+
+			<button id="authBtn">Войти</button>
+		</form>
+	</div>
+
+	<form id="out">
+		<button id="outlog">Выйти</button>
+	</form>
 
 
 </body>
